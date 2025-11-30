@@ -106,7 +106,7 @@ Edit the order in `BottomTabNavigator.tsx`:
 ### Change Active Color
 
 ```typescript
-tabBarActiveTintColor: '#1E90FF',  // Change to blue
+tabBarActiveTintColor: '#1ecbe1',  // Change to blue
 ```
 
 ### Change Inactive Color

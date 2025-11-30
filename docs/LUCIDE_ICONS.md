@@ -22,7 +22,7 @@ import { IconName } from 'lucide-react-native';
 import { Droplet, Heart, Star, Check } from 'lucide-react-native';
 
 // Basic icon
-<Droplet color="#1E90FF" size={24} />
+<Droplet color="#1ecbe1" size={24} />
 
 // Filled icon
 <Heart color="#FF0000" size={32} fill="#FF0000" />
@@ -44,10 +44,10 @@ import { Droplet, Heart, Star, Check } from 'lucide-react-native';
 import { Droplet, Target, TrendingUp, Award } from 'lucide-react-native';
 
 // Water droplet icon
-<Droplet color="#1E90FF" size={48} fill="#1E90FF" />
+<Droplet color="#1ecbe1" size={48} fill="#1ecbe1" />
 
 // Target/goal icon
-<Target color="#1E90FF" size={20} />
+<Target color="#1ecbe1" size={20} />
 
 // Progress/trending icon
 <TrendingUp color="#666" size={18} />
@@ -134,9 +134,9 @@ import {
 ```typescript
 <Droplet 
   size={32}
-  color="#1E90FF"
+  color="#1ecbe1"
   strokeWidth={2.5}
-  fill="#1E90FF"
+  fill="#1ecbe1"
   absoluteStrokeWidth={false}
 />
 ```
@@ -153,7 +153,7 @@ const ICON_SIZES = {
   xlarge: 48,
 };
 
-<Droplet size={ICON_SIZES.medium} color="#1E90FF" />
+<Droplet size={ICON_SIZES.medium} color="#1ecbe1" />
 ```
 
 ### 2. Use Theme Colors
@@ -175,7 +175,7 @@ import { COLORS } from '../constants';
 ### 4. Icon Buttons
 ```typescript
 <TouchableOpacity onPress={handlePress}>
-  <Plus color="#1E90FF" size={24} />
+  <Plus color="#1ecbe1" size={24} />
 </TouchableOpacity>
 ```
 
@@ -214,7 +214,7 @@ import { Heart } from 'lucide-react-native';
 ### Icon with Badge
 ```typescript
 <View style={{ position: 'relative' }}>
-  <Bell color="#1E90FF" size={24} />
+  <Bell color="#1ecbe1" size={24} />
   <View style={styles.badge}>
     <Text style={styles.badgeText}>3</Text>
   </View>

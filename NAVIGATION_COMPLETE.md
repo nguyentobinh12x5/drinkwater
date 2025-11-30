@@ -155,7 +155,7 @@ Label Weight: 600 (Semi-bold)
 Edit `src/navigation/BottomTabNavigator.tsx`:
 
 ```typescript
-tabBarActiveTintColor: '#1E90FF',    // Your custom active color
+tabBarActiveTintColor: '#1ecbe1',    // Your custom active color
 tabBarInactiveTintColor: '#CCCCCC',  // Your custom inactive color
 ```
 

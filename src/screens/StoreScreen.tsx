@@ -6,7 +6,7 @@ export default function StoreScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <ShoppingBag color="#1E90FF" size={48} />
+                <ShoppingBag color="#1ecbe1" size={48} />
                 <Text style={styles.title}>Store</Text>
                 <Text style={styles.subtitle}>Shop for rewards and items</Text>
             </View>
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: '#1E90FF',
+        color: '#1ecbe1',
         marginTop: 12,
     },
     subtitle: {

@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ShoppingBag, Users, Home, GraduationCap, User, Droplet } from 'lucide-react-native';
 
 
-
 // Import screens
 import StoreScreen from '../screens/StoreScreen';
 import ParentScreen from '../screens/ParentScreen';

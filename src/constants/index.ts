@@ -1,7 +1,7 @@
 // App-wide constants
 
 export const COLORS = {
-    primary: '#1E90FF',
+    primary: '#1ecbe1',
     secondary: '#4682B4',
     background: '#F0F8FF',
     white: '#FFFFFF',

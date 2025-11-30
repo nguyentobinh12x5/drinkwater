@@ -1,23 +1,89 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { Users } from 'lucide-react-native';
+import { Users, TrendingUp, Award, Flame } from 'lucide-react-native';
+import { TimeFilter } from '../types';
+import { mockChildren, getChartData, getTodaySummary } from '../utils/HydrationData';
+import TimeFilterTabs from '../components/TimeFilterTabs';
+import ConsumptionChart from '../components/ConsumptionChart';
+import TodayProgress from '../components/TodayProgress';
+import ChildSelector from '../components/ChildSelector';
 
 export default function ParentScreen() {
+    const [activeChildId, setActiveChildId] = useState(mockChildren[0]?.id || '');
+    const [timeFilter, setTimeFilter] = useState<TimeFilter>('day');
+
+    const chartData = getChartData(activeChildId, timeFilter);
+    const todaySummary = getTodaySummary(activeChildId);
+
+    const activeChild = mockChildren.find(c => c.id === activeChildId);
+
     return (
         <View style={styles.container}>
+            {/* Header */}
             <View style={styles.header}>
-                <Users color="#1E90FF" size={48} />
-                <Text style={styles.title}>Parent</Text>
-                <Text style={styles.subtitle}>Parent dashboard and controls</Text>
+                <Users size={32} />
+                <Text style={styles.title}>Parent Dashboard</Text>
             </View>
 
-            <ScrollView style={styles.content}>
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>👨‍👩‍👧‍👦 Parent Dashboard</Text>
-                    <Text style={styles.cardText}>
-                        Monitor your child's progress and manage settings.
-                    </Text>
+            <ScrollView
+                style={styles.content}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Child Selector */}
+                {mockChildren.length > 1 && (
+                    <ChildSelector
+                        children={mockChildren}
+                        activeChildId={activeChildId}
+                        onChildSelect={setActiveChildId}
+                    />
+                )}
+
+                {/* Today's Progress */}
+                <TodayProgress summary={todaySummary} />
+
+                {/* Time Filter Tabs */}
+                <TimeFilterTabs
+                    activeFilter={timeFilter}
+                    onFilterChange={setTimeFilter}
+                />
+
+                {/* Consumption Chart */}
+                <ConsumptionChart data={chartData} timeFilter={timeFilter} />
+
+                {/* Summary Stats */}
+                <View style={styles.summaryCard}>
+                    <Text style={styles.summaryTitle}>Summary & Insights</Text>
+
+                    <View style={styles.statGrid}>
+                        <View style={styles.statCard}>
+                            <TrendingUp color="#1ecbe1" size={24} />
+                            <Text style={styles.statLabel}>Weekly Avg</Text>
+                            <Text style={styles.statValue}>{todaySummary.weeklyAverage} glasses</Text>
+                        </View>
+
+                        <View style={styles.statCard}>
+                            <Award color="#FFD700" size={24} />
+                            <Text style={styles.statLabel}>Goal</Text>
+                            <Text style={styles.statValue}>{todaySummary.todayGoal} glasses/day</Text>
+                        </View>
+                    </View>
                 </View>
+
+                {/* Health Alert */}
+                {todaySummary.todayPercentage < 50 && (
+                    <View style={styles.alertCard}>
+                        <Text style={styles.alertIcon}>⚠️</Text>
+                        <View style={styles.alertContent}>
+                            <Text style={styles.alertTitle}>Hydration Alert</Text>
+                            <Text style={styles.alertText}>
+                                {activeChild?.name} is behind on today's water intake.
+                                Encourage them to drink water!
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                <View style={styles.bottomSpacer} />
             </ScrollView>
         </View>
     );
@@ -29,7 +95,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#F0F8FF',
     },
     header: {
+        display: 'flex',
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         paddingTop: 60,
         paddingBottom: 20,
         backgroundColor: '#FFFFFF',
@@ -40,12 +109,11 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 3,
+        gap: 12,
     },
     title: {
-        fontSize: 32,
+        fontSize: 24,
         fontWeight: 'bold',
-        color: '#1E90FF',
-        marginTop: 12,
     },
     subtitle: {
         fontSize: 16,
@@ -56,26 +124,81 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 20,
     },
-    card: {
+    childTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#333',
+        marginTop: 8,
+        marginBottom: 12,
+    },
+    summaryCard: {
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
-        padding: 24,
-        marginBottom: 16,
+        padding: 20,
+        marginVertical: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 3,
     },
-    cardTitle: {
-        fontSize: 24,
+    summaryTitle: {
+        fontSize: 18,
         fontWeight: 'bold',
         color: '#333',
-        marginBottom: 8,
+        marginBottom: 16,
     },
-    cardText: {
-        fontSize: 16,
+    statGrid: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    statCard: {
+        flex: 1,
+        backgroundColor: '#F8F9FA',
+        borderRadius: 12,
+        padding: 16,
+        alignItems: 'center',
+        gap: 8,
+    },
+    statLabel: {
+        fontSize: 12,
         color: '#666',
-        lineHeight: 24,
+        textAlign: 'center',
+    },
+    statValue: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        textAlign: 'center',
+    },
+    alertCard: {
+        backgroundColor: '#FFF3CD',
+        borderRadius: 12,
+        padding: 16,
+        marginVertical: 8,
+        flexDirection: 'row',
+        gap: 12,
+        borderLeftWidth: 4,
+        borderLeftColor: '#FF9800',
+    },
+    alertIcon: {
+        fontSize: 24,
+    },
+    alertContent: {
+        flex: 1,
+    },
+    alertTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#856404',
+        marginBottom: 4,
+    },
+    alertText: {
+        fontSize: 14,
+        color: '#856404',
+        lineHeight: 20,
+    },
+    bottomSpacer: {
+        height: 20,
     },
 });

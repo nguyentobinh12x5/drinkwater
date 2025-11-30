@@ -6,7 +6,7 @@ export default function SchoolScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <GraduationCap color="#1E90FF" size={48} />
+                <GraduationCap color="#1ecbe1" size={48} />
                 <Text style={styles.title}>School</Text>
                 <Text style={styles.subtitle}>Educational content and activities</Text>
             </View>
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: '#1E90FF',
+        color: '#1ecbe1',
         marginTop: 12,
     },
     subtitle: {

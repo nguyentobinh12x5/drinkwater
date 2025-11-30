@@ -14,33 +14,6 @@ export default function HomeScreen() {
     return (
         <View style={styles.container}>
             <StatusBar style="auto" />
-
-            <View style={styles.header}>
-                <View style={styles.titleContainer}>
-                    <Droplet color="#1E90FF" size={48} fill="#1E90FF" />
-                    <Text style={styles.title}>Drink Water</Text>
-                </View>
-                <Text style={styles.subtitle}>Stay Hydrated!</Text>
-            </View>
-
-            <View style={styles.counterContainer}>
-                <View style={styles.counterHeader}>
-                    <Target color="#1E90FF" size={20} />
-                    <Text style={styles.counterLabel}>Glasses Today</Text>
-                </View>
-                <Text style={styles.counterValue}>{waterCount}</Text>
-                <Text style={styles.counterGoal}>Goal: 8 glasses</Text>
-            </View>
-
-            <TouchableOpacity
-                style={styles.button}
-                onPress={handleDrinkWater}
-                activeOpacity={0.8}
-            >
-                <Droplet color="#FFFFFF" size={24} fill="#FFFFFF" />
-                <Text style={styles.buttonText}>I Drank Water</Text>
-            </TouchableOpacity>
-
             <View style={styles.progressContainer}>
                 <View style={styles.progressHeader}>
                     <TrendingUp color="#666" size={18} />
@@ -58,6 +31,24 @@ export default function HomeScreen() {
                     {Math.round((waterCount / 8) * 100)}% of daily goal
                 </Text>
             </View>
+
+            <View style={styles.counterContainer}>
+                <View style={styles.counterHeader}>
+                    <Target color="#1ecbe1" size={20} />
+                    <Text style={styles.counterLabel}>Glasses Today</Text>
+                </View>
+                <Text style={styles.counterValue}>{waterCount}</Text>
+                <Text style={styles.counterGoal}>Goal: 8 glasses</Text>
+            </View>
+
+            <TouchableOpacity
+                style={styles.button}
+                onPress={handleDrinkWater}
+                activeOpacity={0.8}
+            >
+                <Droplet color="#FFFFFF" size={24} fill="#FFFFFF" />
+                <Text style={styles.buttonText}>I Drank Water</Text>
+            </TouchableOpacity>
 
             {waterCount >= 8 && (
                 <View style={styles.achievementBanner}>
@@ -89,7 +80,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 42,
         fontWeight: 'bold',
-        color: '#1E90FF',
+        color: '#1ecbe1',
     },
     subtitle: {
         fontSize: 18,
@@ -123,7 +114,7 @@ const styles = StyleSheet.create({
     counterValue: {
         fontSize: 72,
         fontWeight: 'bold',
-        color: '#1E90FF',
+        color: '#1ecbe1',
         marginBottom: 8,
     },
     counterGoal: {
@@ -131,7 +122,7 @@ const styles = StyleSheet.create({
         color: '#999',
     },
     button: {
-        backgroundColor: '#1E90FF',
+        backgroundColor: '#1ecbe1',
         paddingVertical: 18,
         paddingHorizontal: 32,
         borderRadius: 16,
@@ -140,7 +131,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         gap: 8,
         marginBottom: 40,
-        shadowColor: '#1E90FF',
+        shadowColor: '#1ecbe1',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -175,7 +166,7 @@ const styles = StyleSheet.create({
     },
     progressFill: {
         height: '100%',
-        backgroundColor: '#1E90FF',
+        backgroundColor: '#1ecbe1',
         borderRadius: 6,
     },
     progressText: {
