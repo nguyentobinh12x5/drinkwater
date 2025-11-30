@@ -77,7 +77,7 @@ export default function HealthFlags({ flags }: HealthFlagsProps) {
                             <View style={styles.detailRow}>
                                 <Text style={styles.detailLabel}>Average Intake:</Text>
                                 <Text style={styles.detailValue}>
-                                    {flag.averageIntake} / {flag.recommendedGoal} glasses
+                                    {flag.averageIntake * 250} / {flag.recommendedGoal * 250} ml
                                 </Text>
                             </View>
                             <View style={styles.detailRow}>

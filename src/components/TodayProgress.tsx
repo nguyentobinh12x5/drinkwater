@@ -42,14 +42,14 @@ export default function TodayProgress({ summary }: TodayProgressProps) {
                     <View style={styles.statRow}>
                         <Text style={styles.statLabel}>Consumed</Text>
                         <Text style={styles.statValue}>
-                            {summary.todayGlasses} / {summary.todayGoal} glasses
+                            {summary.todayGlasses * 250} / {summary.todayGoal * 250} ml
                         </Text>
                     </View>
 
                     <View style={styles.statRow}>
                         <Text style={styles.statLabel}>Remaining</Text>
                         <Text style={styles.statValue}>
-                            {Math.max(0, summary.todayGoal - summary.todayGlasses)} glasses
+                            {Math.max(0, (summary.todayGoal - summary.todayGlasses) * 250)} ml
                         </Text>
                     </View>
 

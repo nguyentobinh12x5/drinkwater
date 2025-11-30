@@ -12,7 +12,10 @@ export default function ParentScreen() {
     const [activeChildId, setActiveChildId] = useState(mockChildren[0]?.id || '');
     const [timeFilter, setTimeFilter] = useState<TimeFilter>('day');
 
-    const chartData = getChartData(activeChildId, timeFilter);
+    const chartData = getChartData(activeChildId, timeFilter).map(d => ({
+        ...d,
+        consumption: (d.consumption || 0) * 250
+    }));
     const todaySummary = getTodaySummary(activeChildId);
 
     const activeChild = mockChildren.find(c => c.id === activeChildId);
@@ -58,13 +61,13 @@ export default function ParentScreen() {
                         <View style={styles.statCard}>
                             <TrendingUp color="#1ecbe1" size={24} />
                             <Text style={styles.statLabel}>Weekly Avg</Text>
-                            <Text style={styles.statValue}>{todaySummary.weeklyAverage} glasses</Text>
+                            <Text style={styles.statValue}>{Math.round(todaySummary.weeklyAverage * 250)} ml</Text>
                         </View>
 
                         <View style={styles.statCard}>
                             <Award color="#FFD700" size={24} />
                             <Text style={styles.statLabel}>Goal</Text>
-                            <Text style={styles.statValue}>{todaySummary.todayGoal} glasses/day</Text>
+                            <Text style={styles.statValue}>{Math.round(todaySummary.todayGoal * 250)} ml/day</Text>
                         </View>
                     </View>
                 </View>

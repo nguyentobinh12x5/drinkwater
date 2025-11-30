@@ -68,7 +68,7 @@ export default function ClassStatsCard({ stats }: ClassStatsCardProps) {
             </View>
 
             <Text style={styles.averageText}>
-                Average: {stats.averageConsumption} glasses/student
+                Average: {Math.round(stats.averageConsumption * 250)} ml/student
             </Text>
         </View>
     );
