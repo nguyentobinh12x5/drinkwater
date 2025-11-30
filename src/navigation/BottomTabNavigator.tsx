@@ -41,7 +41,7 @@ export default function BottomTabNavigator() {
                         case 'Home':
                             return focused ? (
                                 <LinearGradient
-                                    colors={['#95c6ffff', '#52a6faff', '#3096fdff']}
+                                    colors={['#95c6ffff', '#52d0faff', '#1ecbe1']}
                                     start={{ x: 0, y: 0 }}
                                     end={{ x: 1, y: 1 }}
                                     style={{

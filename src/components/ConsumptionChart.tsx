@@ -54,8 +54,11 @@ export default function ConsumptionChart({ data, timeFilter }: ConsumptionChartP
                         backgroundGradientFrom: '#FFFFFF',
                         backgroundGradientTo: '#FFFFFF',
                         decimalPlaces: 1,
-                        color: (opacity = 1) => `rgba(0, 200, 255, ${opacity})`,
-                        labelColor: (opacity = 1) => `rgba(150, 150, 150, ${opacity})`,
+                        color: (opacity = 1) => `rgba(30, 203, 225, ${opacity})`,
+
+                        fillShadowGradient: '#1ecbe1',
+                        fillShadowGradientOpacity: 1,
+                        labelColor: () => '#999999',
                         barPercentage: 0.7,
                         propsForBackgroundLines: {
                             strokeWidth: 0,

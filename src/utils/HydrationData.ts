@@ -18,8 +18,16 @@ export const mockChildren: Child[] = [
     },
 ];
 
+// Cache for generated records to ensure consistency
+const recordsCache: { [childId: string]: HydrationRecord[] } = {};
+
 // Generate mock hydration records for the past 30 days
 export const generateMockRecords = (childId: string, dailyGoal: number): HydrationRecord[] => {
+    // Return cached records if they exist
+    if (recordsCache[childId]) {
+        return recordsCache[childId];
+    }
+
     const records: HydrationRecord[] = [];
     const now = new Date();
 
@@ -52,7 +60,12 @@ export const generateMockRecords = (childId: string, dailyGoal: number): Hydrati
         }
     }
 
-    return records.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    const sortedRecords = records.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+    // Cache the generated records
+    recordsCache[childId] = sortedRecords;
+
+    return sortedRecords;
 };
 
 // Get records for a specific child

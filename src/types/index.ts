@@ -55,3 +55,63 @@ export interface ChildHydrationSummary {
     weeklyAverage: number;
     currentStreak: number; // Days meeting goal
 }
+
+// School/Teacher Mode Types
+
+export interface Student {
+    id: string;
+    name: string;
+    classId: string;
+    dailyGoal: number;
+    isAnonymized?: boolean; // For privacy
+}
+
+export interface ClassRoom {
+    id: string;
+    name: string; // e.g., "Class 4A"
+    teacherId: string;
+    studentCount: number;
+}
+
+export interface ClassStats {
+    classId: string;
+    className: string;
+    totalStudents: number;
+    studentsMetGoal: number;
+    percentageMetGoal: number;
+    averageConsumption: number;
+    lowIntakeCount: number; // Students below threshold
+}
+
+export interface StudentFlag {
+    studentId: string;
+    studentName: string;
+    classId: string;
+    reason: 'low_intake' | 'no_activity' | 'health_concern';
+    severity: 'low' | 'medium' | 'high';
+    daysConsecutive: number;
+    averageIntake: number;
+    recommendedGoal: number;
+}
+
+export interface Challenge {
+    id: string;
+    title: string;
+    description: string;
+    type: 'class' | 'school' | 'inter_class';
+    startDate: Date;
+    endDate: Date;
+    goal: number; // Total glasses or percentage
+    participants: string[]; // Class IDs
+    isActive: boolean;
+}
+
+export interface ChallengeProgress {
+    challengeId: string;
+    classId: string;
+    className: string;
+    currentProgress: number;
+    goalProgress: number;
+    percentageComplete: number;
+    rank: number;
+}
