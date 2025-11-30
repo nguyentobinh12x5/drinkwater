@@ -1,15 +1,24 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ImageBackground, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ImageBackground, Dimensions, DeviceEventEmitter } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Award } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
-//              onPress={handleDrinkWater}
 export default function HomeScreen() {
     const [waterCount, setWaterCount] = React.useState(0);
     const DAILY_GOAL = 8;
     const GLASS_VOLUME = 250; // ml
+
+    React.useEffect(() => {
+        const subscription = DeviceEventEmitter.addListener('addWater', () => {
+            setWaterCount(prev => prev + 1);
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, []);
 
     const handleDrinkWater = () => {
         setWaterCount(prev => prev + 1);
@@ -214,7 +223,7 @@ const styles = StyleSheet.create({
     plantImage: {
         width: 250,
         height: 250,
-        marginBottom: -90, // Overlap with pot
+        marginBottom: -85, // Overlap with pot
         zIndex: 1,
     },
     potImage: {

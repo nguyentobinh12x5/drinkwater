@@ -1,4 +1,4 @@
-import React from 'react';
+import { DeviceEventEmitter } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -78,6 +78,14 @@ export default function BottomTabNavigator() {
             <Tab.Screen
                 name="Home"
                 component={HomeScreen}
+                listeners={({ navigation }) => ({
+                    tabPress: (e) => {
+                        if (navigation.isFocused()) {
+                            e.preventDefault();
+                            DeviceEventEmitter.emit('addWater');
+                        }
+                    },
+                })}
             />
             <Tab.Screen
                 name="School"
