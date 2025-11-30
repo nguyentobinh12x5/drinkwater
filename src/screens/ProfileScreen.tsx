@@ -22,10 +22,6 @@ export default function ProfileScreen() {
     const weekData = getWeeklyStreakData(userId);
     const monthlyAverage = getMonthlyAverage(userId);
 
-    const formatDate = (date: Date) => {
-        return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    };
-
     return (
         <View style={styles.container}>
             {/* Header */}
@@ -34,7 +30,7 @@ export default function ProfileScreen() {
                     <Avatar
                         source={userProfile.avatar}
                         name={userProfile.name}
-                        size={80}
+                        size={60}
                     />
                     <View style={styles.headerText}>
                         <Text style={styles.title}>{userProfile.name}</Text>

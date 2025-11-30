@@ -1,193 +1,307 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ImageBackground, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Droplet, Target, TrendingUp, Award } from 'lucide-react-native';
+import { Award } from 'lucide-react-native';
 
+const { width, height } = Dimensions.get('window');
 
+//              onPress={handleDrinkWater}
 export default function HomeScreen() {
     const [waterCount, setWaterCount] = React.useState(0);
+    const DAILY_GOAL = 8;
+    const GLASS_VOLUME = 250; // ml
 
     const handleDrinkWater = () => {
         setWaterCount(prev => prev + 1);
     };
 
+    // Determine plant status based on water count
+    const getPlantImage = () => {
+        if (waterCount >= DAILY_GOAL) {
+            return require('../../assets/characters/tree/castus-happy.png');
+        } else if (waterCount >= DAILY_GOAL / 2) {
+            return require('../../assets/characters/tree/castus-growth.png');
+        } else {
+            return require('../../assets/characters/tree/castus-sad.png');
+        }
+    };
+
+    const progressPercentage = Math.min((waterCount / DAILY_GOAL) * 100, 100);
+
     return (
-        <View style={styles.container}>
-            <StatusBar style="auto" />
-            <View style={styles.progressContainer}>
-                <View style={styles.progressHeader}>
-                    <TrendingUp color="#666" size={18} />
-                    <Text style={styles.progressTitle}>Daily Progress</Text>
+        <ImageBackground
+            source={require('../../assets/background/background1.png')}
+            style={styles.container}
+            resizeMode="cover"
+        >
+            <StatusBar style="light" />
+
+            {/* Top Status Bar */}
+            <View style={styles.topBar}>
+                <View style={styles.statusCard}>
+                    <View style={styles.plantIconContainer}>
+                        <Image
+                            source={require('../../assets/characters/tree/castus-happy.png')}
+                            style={styles.miniPlantIcon}
+                            resizeMode="contain"
+                        />
+                    </View>
+                    <View style={styles.statusInfo}>
+                        <View style={styles.statusHeader}>
+                            <Text style={styles.plantName}>Devil's Ivy</Text>
+                            <Text style={styles.plantLevel}>Lv3</Text>
+                        </View>
+                        <View style={styles.progressRow}>
+                            <Text style={styles.todayLabel}>Today</Text>
+                            <View style={styles.progressBarContainer}>
+                                <View style={[styles.progressBarFill, { width: `${progressPercentage}%` }]} />
+                                <Text style={styles.progressText}>
+                                    {waterCount * GLASS_VOLUME} ml
+                                </Text>
+                            </View>
+                            <Text style={styles.percentageText}>{Math.round(progressPercentage)}%</Text>
+                        </View>
+                    </View>
                 </View>
-                <View style={styles.progressBar}>
-                    <View
-                        style={[
-                            styles.progressFill,
-                            { width: `${Math.min((waterCount / 8) * 100, 100)}%` }
-                        ]}
+            </View>
+
+            {/* Main Game Area */}
+            <View style={styles.gameArea}>
+                {/* Plant Container */}
+                <View style={styles.plantContainer}>
+                    {/* Plant Image - Changes based on status */}
+                    <Image
+                        source={getPlantImage()}
+                        style={styles.plantImage}
+                        resizeMode="contain"
+                    />
+                    {/* Pot Image */}
+                    <Image
+                        source={require('../../assets/characters/plot/pot-default.png')}
+                        style={styles.potImage}
+                        resizeMode="contain"
                     />
                 </View>
-                <Text style={styles.progressText}>
-                    {Math.round((waterCount / 8) * 100)}% of daily goal
-                </Text>
             </View>
-
-            <View style={styles.counterContainer}>
-                <View style={styles.counterHeader}>
-                    <Target color="#1ecbe1" size={20} />
-                    <Text style={styles.counterLabel}>Glasses Today</Text>
-                </View>
-                <Text style={styles.counterValue}>{waterCount}</Text>
-                <Text style={styles.counterGoal}>Goal: 8 glasses</Text>
-            </View>
-
-            <TouchableOpacity
-                style={styles.button}
-                onPress={handleDrinkWater}
-                activeOpacity={0.8}
-            >
-                <Droplet color="#FFFFFF" size={24} fill="#FFFFFF" />
-                <Text style={styles.buttonText}>I Drank Water</Text>
-            </TouchableOpacity>
-
-            {waterCount >= 8 && (
-                <View style={styles.achievementBanner}>
-                    <Award color="#4CAF50" size={24} fill="#4CAF50" />
-                    <Text style={styles.achievementText}>🎉 Goal Achieved!</Text>
+            {/* Achievement Toast */}
+            {waterCount >= DAILY_GOAL && (
+                <View style={styles.achievementToast}>
+                    <Award color="#FFD700" size={24} fill="#FFD700" />
+                    <Text style={styles.achievementText}>Goal Met!</Text>
                 </View>
             )}
-        </View>
+        </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F0F8FF',
-        paddingHorizontal: 20,
+        width: width,
+        height: height,
+    },
+    topBar: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
         paddingTop: 60,
+        paddingHorizontal: 20,
     },
-    header: {
-        alignItems: 'center',
-        marginBottom: 40,
-    },
-    titleContainer: {
+    statusCard: {
+        flex: 1,
         flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        marginBottom: 8,
-    },
-    title: {
-        fontSize: 42,
-        fontWeight: 'bold',
-        color: '#1ecbe1',
-    },
-    subtitle: {
-        fontSize: 18,
-        color: '#4682B4',
-        fontWeight: '500',
-    },
-    counterContainer: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 24,
-        padding: 40,
+        borderRadius: 30,
+        padding: 8,
+        marginRight: 16,
         alignItems: 'center',
-        marginBottom: 40,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 5,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    counterHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        marginBottom: 12,
-    },
-    counterLabel: {
-        fontSize: 16,
-        color: '#666',
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-    },
-    counterValue: {
-        fontSize: 72,
-        fontWeight: 'bold',
-        color: '#1ecbe1',
-        marginBottom: 8,
-    },
-    counterGoal: {
-        fontSize: 14,
-        color: '#999',
-    },
-    button: {
-        backgroundColor: '#1ecbe1',
-        paddingVertical: 18,
-        paddingHorizontal: 32,
-        borderRadius: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
+    plantIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#E8F5E9',
         justifyContent: 'center',
-        gap: 8,
-        marginBottom: 40,
-        shadowColor: '#1ecbe1',
+        alignItems: 'center',
+        marginRight: 10,
+        overflow: 'hidden',
+    },
+    miniPlantIcon: {
+        width: 30,
+        height: 30,
+    },
+    statusInfo: {
+        flex: 1,
+    },
+    statusHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    plantName: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333',
+        marginRight: 6,
+    },
+    plantLevel: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#4CAF50',
+    },
+    progressRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    todayLabel: {
+        fontSize: 12,
+        color: '#29B6F6',
+        fontWeight: 'bold',
+    },
+    progressBarContainer: {
+        flex: 1,
+        height: 16,
+        backgroundColor: '#F0F0F0',
+        borderRadius: 8,
+        overflow: 'hidden',
+        justifyContent: 'center',
+    },
+    progressBarFill: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        height: '100%',
+        backgroundColor: '#B3E5FC',
+    },
+    progressText: {
+        fontSize: 10,
+        color: '#666',
+        textAlign: 'center',
+        zIndex: 1,
+    },
+    percentageText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#29B6F6',
+    },
+    topIcons: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    iconButton: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    gameArea: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 280, // Push plant down a bit
+    },
+    plantContainer: {
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        height: 300,
+    },
+    plantImage: {
+        width: 250,
+        height: 250,
+        marginBottom: -90, // Overlap with pot
+        zIndex: 1,
+    },
+    potImage: {
+        width: 180,
+        height: 140,
+    },
+    bottomControls: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        paddingBottom: 40,
+        paddingHorizontal: 30,
+    },
+    menuButton: {
+        width: 50,
+        height: 50,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    menuIconInner: {
+        width: 24,
+        height: 24,
+        backgroundColor: '#E0E0E0',
+        borderRadius: 6,
+    },
+    waterButton: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        shadowColor: '#0288D1',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
-        elevation: 5,
+        elevation: 6,
     },
-    buttonText: {
-        color: '#FFFFFF',
-        fontSize: 20,
-        fontWeight: 'bold',
+    waterButtonGradient: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 4,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
     },
-    progressContainer: {
+    waterBadge: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: 24,
+        height: 24,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    progressHeader: {
+    waterBadgeText: {
+        color: '#0288D1',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    achievementToast: {
+        position: 'absolute',
+        top: 130,
+        alignSelf: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        marginBottom: 12,
-    },
-    progressTitle: {
-        fontSize: 16,
-        color: '#666',
-        fontWeight: '600',
-    },
-    progressBar: {
-        width: '100%',
-        height: 12,
-        backgroundColor: '#E0E0E0',
-        borderRadius: 6,
-        overflow: 'hidden',
-        marginBottom: 12,
-    },
-    progressFill: {
-        height: '100%',
-        backgroundColor: '#1ecbe1',
-        borderRadius: 6,
-    },
-    progressText: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '500',
-    },
-    achievementBanner: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 12,
-        backgroundColor: '#E8F5E9',
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        borderRadius: 16,
-        marginTop: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     achievementText: {
-        fontSize: 18,
+        color: '#FFD700',
         fontWeight: 'bold',
-        color: '#4CAF50',
+        fontSize: 16,
     },
 });
