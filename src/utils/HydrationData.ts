@@ -6,14 +6,14 @@ export const mockChildren: Child[] = [
         id: 'child-1',
         name: 'Emma',
         age: 8,
-        avatar: '👧',
+        avatar: require('../../assets/profile/Emma.png'),
         dailyGoal: 8,
     },
     {
         id: 'child-2',
         name: 'Lucas',
         age: 10,
-        avatar: '👦',
+        avatar: require('../../assets/profile/Lucas.png'),
         dailyGoal: 10,
     },
 ];
@@ -243,3 +243,125 @@ export const getTodaySummary = (childId: string): ChildHydrationSummary => {
         currentStreak,
     };
 };
+
+// Get weekly streak data for the last 7 days
+export const getWeeklyStreakData = (childId: string): import('../types').WeeklyStreakData[] => {
+    const child = mockChildren.find(c => c.id === childId);
+    if (!child) return [];
+
+    const records = getChildRecords(childId);
+    const now = new Date();
+    const weekData: import('../types').WeeklyStreakData[] = [];
+
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        date.setHours(0, 0, 0, 0);
+
+        const nextDay = new Date(date);
+        nextDay.setDate(nextDay.getDate() + 1);
+
+        const dayRecords = records.filter(
+            r => r.timestamp >= date && r.timestamp < nextDay
+        );
+
+        const glasses = dayRecords.reduce((sum, r) => sum + r.glasses, 0);
+        const metGoal = glasses >= child.dailyGoal;
+
+        weekData.push({
+            date,
+            dayLabel: date.toLocaleDateString('en-US', { weekday: 'short' }),
+            glasses,
+            goal: child.dailyGoal,
+            metGoal,
+        });
+    }
+
+    return weekData;
+};
+
+// Get best streak from all historical data
+export const getBestStreak = (childId: string): number => {
+    const child = mockChildren.find(c => c.id === childId);
+    if (!child) return 0;
+
+    const records = getChildRecords(childId);
+    const now = new Date();
+    let bestStreak = 0;
+    let currentStreakCount = 0;
+
+    // Check last 90 days for best streak
+    for (let i = 0; i < 90; i++) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        date.setHours(0, 0, 0, 0);
+
+        const nextDay = new Date(date);
+        nextDay.setDate(nextDay.getDate() + 1);
+
+        const dayRecords = records.filter(
+            r => r.timestamp >= date && r.timestamp < nextDay
+        );
+
+        const dayTotal = dayRecords.reduce((sum, r) => sum + r.glasses, 0);
+
+        if (dayTotal >= child.dailyGoal) {
+            currentStreakCount++;
+            bestStreak = Math.max(bestStreak, currentStreakCount);
+        } else {
+            currentStreakCount = 0;
+        }
+    }
+
+    return bestStreak;
+};
+
+// Get total glasses consumed all time
+export const getTotalGlassesAllTime = (childId: string): number => {
+    const records = getChildRecords(childId);
+    return records.reduce((sum, r) => sum + r.glasses, 0);
+};
+
+// Get monthly average
+export const getMonthlyAverage = (childId: string): number => {
+    const records = getChildRecords(childId);
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const monthRecords = records.filter(r => r.timestamp >= monthStart);
+    const totalGlasses = monthRecords.reduce((sum, r) => sum + r.glasses, 0);
+    const daysInMonth = now.getDate();
+
+    return Math.round((totalGlasses / daysInMonth) * 10) / 10;
+};
+
+// Get user profile stats
+export const getUserProfileStats = (childId: string): import('../types').UserProfile => {
+    const child = mockChildren.find(c => c.id === childId);
+    if (!child) {
+        return {
+            id: childId,
+            name: 'Unknown',
+            age: 0,
+            avatar: '👤',
+            dailyGoal: 8,
+            reminderEnabled: true,
+            joinDate: new Date(),
+            totalGlassesAllTime: 0,
+            bestStreak: 0,
+        };
+    }
+
+    return {
+        id: child.id,
+        name: child.name,
+        age: child.age,
+        avatar: child.avatar,
+        dailyGoal: child.dailyGoal,
+        reminderEnabled: true,
+        joinDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+        totalGlassesAllTime: getTotalGlassesAllTime(childId),
+        bestStreak: getBestStreak(childId),
+    };
+};
+

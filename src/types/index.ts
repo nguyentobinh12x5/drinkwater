@@ -13,6 +13,14 @@ export interface User {
     reminderEnabled: boolean;
 }
 
+export interface UserProfile extends User {
+    age: number;
+    avatar: any; // ImageSourcePropType or emoji string
+    joinDate: Date;
+    totalGlassesAllTime: number;
+    bestStreak: number;
+}
+
 export interface DailyStats {
     date: string;
     totalGlasses: number;
@@ -26,7 +34,7 @@ export interface Child {
     id: string;
     name: string;
     age: number;
-    avatar: string; // emoji or image
+    avatar: any; // ImageSourcePropType or emoji string
     dailyGoal: number; // glasses per day
 }
 
@@ -114,4 +122,12 @@ export interface ChallengeProgress {
     goalProgress: number;
     percentageComplete: number;
     rank: number;
+}
+
+export interface WeeklyStreakData {
+    date: Date;
+    dayLabel: string; // 'Sun', 'Mon', etc.
+    glasses: number;
+    goal: number;
+    metGoal: boolean;
 }

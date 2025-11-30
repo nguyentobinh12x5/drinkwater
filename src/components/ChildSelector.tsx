@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Child } from '../types';
+import Avatar from './Avatar';
 
 interface ChildSelectorProps {
     children: Child[];
@@ -26,7 +27,7 @@ export default function ChildSelector({ children, activeChildId, onChildSelect }
                         onPress={() => onChildSelect(child.id)}
                         activeOpacity={0.7}
                     >
-                        <Text style={styles.avatar}>{child.avatar}</Text>
+                        <Avatar source={child.avatar} name={child.name} size={40} />
                         <Text
                             style={[
                                 styles.childName,
