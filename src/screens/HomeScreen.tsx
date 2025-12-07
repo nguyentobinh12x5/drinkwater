@@ -1,41 +1,81 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ImageBackground, Dimensions, DeviceEventEmitter } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ImageBackground, Dimensions, DeviceEventEmitter, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Award } from 'lucide-react-native';
+import { ref, onValue, off, set, get } from 'firebase/database';
+import { db } from '../../firebaseConfig';
+import { useAppSelector } from '../store/hooks';
 
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen() {
-    const [waterCount, setWaterCount] = React.useState(0);
-    const DAILY_GOAL = 8;
-    const GLASS_VOLUME = 250; // ml
+    const { user } = useAppSelector((state) => state.user);
+    const [waterIntake, setWaterIntake] = React.useState(0);
+    const DAILY_GOAL = 2500;
+    const DRINK_AMOUNT = 250;
 
+    // Fetch water intake from Firebase
+    useEffect(() => {
+        if (!user) return;
+
+        const waterRef = ref(db, `users/${user.uid}/total_water`);
+        const unsubscribe = onValue(waterRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data !== null) {
+                setWaterIntake(data);
+            } else {
+                setWaterIntake(0);
+            }
+        });
+
+        return () => off(waterRef);
+    }, [user]);
+
+    // Function to add water and update Firebase
+    const addWater = async () => {
+        if (!user) {
+            Alert.alert('Error', 'User not logged in');
+            return;
+        }
+
+        try {
+            const waterRef = ref(db, `users/${user.uid}/total_water`);
+            const snapshot = await get(waterRef);
+            const currentWater = snapshot.val() || 0;
+            const newWater = Math.min(currentWater + DRINK_AMOUNT, DAILY_GOAL + 1000);
+
+            // Update Firebase
+            await set(waterRef, newWater);
+
+            console.log(`Added ${DRINK_AMOUNT}ml. Total: ${newWater}ml`);
+        } catch (error) {
+            console.error('Error adding water:', error);
+            Alert.alert('Error', 'Failed to add water. Please try again.');
+        }
+    };
+
+    // Listen for DeviceEventEmitter 'addWater' event
     React.useEffect(() => {
         const subscription = DeviceEventEmitter.addListener('addWater', () => {
-            setWaterCount(prev => prev + 1);
+            addWater();
         });
 
         return () => {
             subscription.remove();
         };
-    }, []);
+    }, [user]);
 
-    const handleDrinkWater = () => {
-        setWaterCount(prev => prev + 1);
-    };
-
-    // Determine plant status based on water count
     const getPlantImage = () => {
-        if (waterCount >= DAILY_GOAL) {
+        if (waterIntake >= DAILY_GOAL) {
             return require('../../assets/characters/tree/castus-happy.png');
-        } else if (waterCount >= DAILY_GOAL / 2) {
+        } else if (waterIntake >= DAILY_GOAL / 2) {
             return require('../../assets/characters/tree/castus-growth.png');
         } else {
             return require('../../assets/characters/tree/castus-sad.png');
         }
     };
 
-    const progressPercentage = Math.min((waterCount / DAILY_GOAL) * 100, 100);
+    const progressPercentage = Math.min((waterIntake / DAILY_GOAL) * 100, 100);
 
     return (
         <ImageBackground
@@ -65,7 +105,7 @@ export default function HomeScreen() {
                             <View style={styles.progressBarContainer}>
                                 <View style={[styles.progressBarFill, { width: `${progressPercentage}%` }]} />
                                 <Text style={styles.progressText}>
-                                    {waterCount * GLASS_VOLUME} ml
+                                    {waterIntake} ml
                                 </Text>
                             </View>
                             <Text style={styles.percentageText}>{Math.round(progressPercentage)}%</Text>
@@ -92,8 +132,9 @@ export default function HomeScreen() {
                     />
                 </View>
             </View>
+
             {/* Achievement Toast */}
-            {waterCount >= DAILY_GOAL && (
+            {waterIntake >= DAILY_GOAL && (
                 <View style={styles.achievementToast}>
                     <Award color="#FFD700" size={24} fill="#FFD700" />
                     <Text style={styles.achievementText}>Goal Met!</Text>
@@ -256,15 +297,30 @@ const styles = StyleSheet.create({
         backgroundColor: '#E0E0E0',
         borderRadius: 6,
     },
+    waterButtonContainer: {
+        position: 'absolute',
+        bottom: 100,
+        alignSelf: 'center',
+        zIndex: 10,
+    },
     waterButton: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 90,
+        height: 90,
+        borderRadius: 45,
+        backgroundColor: '#1ecbe1',
+        justifyContent: 'center',
+        alignItems: 'center',
         shadowColor: '#0288D1',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 6,
+    },
+    waterButtonText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+        fontSize: 14,
+        marginTop: 4,
     },
     waterButtonGradient: {
         width: '100%',

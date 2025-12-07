@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Settings } from 'lucide-react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { Settings, LogOut } from 'lucide-react-native';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../firebaseConfig';
 import { mockChildren } from '../utils/HydrationData';
 import {
     getTodaySummary,
@@ -12,8 +14,10 @@ import DailyGoalCard from '../components/DailyGoalCard';
 import WeeklyStreakCalendar from '../components/WeeklyStreakCalendar';
 import ProfileStatsCard from '../components/ProfileStatsCard';
 import Avatar from '../components/Avatar';
+import { useAppSelector } from '../store/hooks';
 
 export default function ProfileScreen() {
+    const { user } = useAppSelector((state) => state.user);
     // For now, use the first child's data. In a real app, this would be the logged-in user
     const [userId] = useState(mockChildren[0]?.id || 'child-1');
 
@@ -22,6 +26,33 @@ export default function ProfileScreen() {
     const weekData = getWeeklyStreakData(userId);
     const monthlyAverage = getMonthlyAverage(userId);
 
+    // Get user display name from Firebase auth (email or displayName)
+    const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
+
+    const handleLogout = async () => {
+        Alert.alert(
+            'Logout',
+            'Are you sure you want to logout?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Logout',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await signOut(auth);
+                        } catch (error) {
+                            Alert.alert('Error', 'Failed to logout. Please try again.');
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
     return (
         <View style={styles.container}>
             {/* Header */}
@@ -29,11 +60,14 @@ export default function ProfileScreen() {
                 <View style={styles.headerContent}>
                     <Avatar
                         source={userProfile.avatar}
-                        name={userProfile.name}
+                        name={userName}
                         size={60}
                     />
                     <View style={styles.headerText}>
-                        <Text style={styles.title}>{userProfile.name}</Text>
+                        <Text style={styles.title}>{userName}</Text>
+                        {user?.email && (
+                            <Text style={styles.emailText}>{user.email}</Text>
+                        )}
                     </View>
                 </View>
                 <TouchableOpacity style={styles.settingsButton}>
@@ -79,6 +113,12 @@ export default function ProfileScreen() {
                         </View>
                     </View>
                 )}
+
+                {/* Logout Button */}
+                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                    <LogOut color="#ff4444" size={20} />
+                    <Text style={styles.logoutText}>Logout</Text>
+                </TouchableOpacity>
 
                 <View style={styles.bottomSpacer} />
             </ScrollView>
@@ -130,6 +170,11 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         color: '#333',
+    },
+    emailText: {
+        fontSize: 14,
+        color: '#666',
+        marginTop: 2,
     },
     settingsButton: {
         padding: 8,
@@ -202,5 +247,27 @@ const styles = StyleSheet.create({
     },
     bottomSpacer: {
         height: 20,
+    },
+    logoutButton: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 16,
+        marginVertical: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        borderWidth: 1,
+        borderColor: '#ff4444',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    logoutText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#ff4444',
     },
 });
