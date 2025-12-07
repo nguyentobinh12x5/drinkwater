@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ImageBackground, Dimensions, DeviceEventEmitter, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Award, Volume2, VolumeX } from 'lucide-react-native';
@@ -8,17 +8,27 @@ import { useAppSelector } from '../store/hooks';
 import { CircleX } from 'lucide-react-native';
 import Rain from '../components/Rain';
 import { Audio } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
 
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen() {
     const { user } = useAppSelector((state) => state.user);
     const [waterIntake, setWaterIntake] = React.useState(0);
+    const [displayWaterIntake, setDisplayWaterIntake] = React.useState(0); // For plant visual display
     const [showRain, setShowRain] = React.useState(false);
     const [sound, setSound] = React.useState<Audio.Sound | null>(null);
     const [isPlaying, setIsPlaying] = React.useState(false);
+    const [showHappyVideo, setShowHappyVideo] = React.useState(false);
     const DAILY_GOAL = 2500;
-    const DRINK_AMOUNT = 250;
+    const DRINK_AMOUNT = 1000;
+
+    // Video player for happy animation
+    const videoSource = require('../../assets/video/video-catus-happy.mp4');
+    const player = useVideoPlayer(videoSource, player => {
+        player.loop = false;
+        player.volume = 0.5;
+    });
 
     // Fetch water intake from Firebase and detect changes
     useEffect(() => {
@@ -31,15 +41,32 @@ export default function HomeScreen() {
 
             // Check if water increased (realtime update detected)
             if (newWaterIntake > waterIntake && waterIntake > 0) {
-                console.log(`✅ Real-time update detected: ${waterIntake}ml → ${newWaterIntake}ml`);
+                console.log(`${waterIntake}ml → ${newWaterIntake}ml`);
                 triggerRainAnimation();
+            }
+
+            // Check if plant just became happy (reached goal for the first time)
+            const isNowHappy = newWaterIntake >= DAILY_GOAL;
+            const wasNotHappy = displayWaterIntake < DAILY_GOAL; // Use displayWaterIntake for visual state check
+
+            if (isNowHappy && wasNotHappy && waterIntake > 0) {
+                console.log('🎉 Goal reached! Starting animation sequence');
+                triggerHappyVideo();
+                // DON'T update displayWaterIntake - keep showing old plant state
+                // Will update after video finishes
+            } else if (waterIntake === 0) {
+                // First load - initialize both states
+                setDisplayWaterIntake(newWaterIntake);
+            } else if (!isNowHappy || !wasNotHappy) {
+                // Normal update - not transitioning to happy, update display immediately
+                setDisplayWaterIntake(newWaterIntake);
             }
 
             setWaterIntake(newWaterIntake);
         });
 
         return () => off(waterRef);
-    }, [user, waterIntake]);
+    }, [user, waterIntake, displayWaterIntake]);
 
     // Function to trigger rain animation
     const triggerRainAnimation = () => {
@@ -49,6 +76,36 @@ export default function HomeScreen() {
             setShowRain(false);
         }, 2000);
     };
+
+    // Function to trigger happy video (after rain finishes)
+    const triggerHappyVideo = () => {
+        // Wait 2 seconds for rain animation to finish before showing video
+        setTimeout(() => {
+            setShowHappyVideo(true);
+            player.replay();
+        }, 2000);
+    };
+
+    // Listen for video end to hide overlay immediately
+    useEffect(() => {
+        if (!showHappyVideo) return;
+
+        const subscription = player.addListener('playingChange', (payload) => {
+            // When video stops playing and has progressed beyond start
+            if (!payload.isPlaying && payload.oldIsPlaying && player.currentTime > 0) {
+                console.log('✅ Video finished, hiding overlay');
+                console.log('🌵 NOW changing plant to happy state');
+                setShowHappyVideo(false);
+                // NOW update the display to show happy plant
+                setDisplayWaterIntake(waterIntake);
+            }
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, [showHappyVideo, player]);
+
 
     // Function to add water and update Firebase
     const addWater = async () => {
@@ -66,7 +123,7 @@ export default function HomeScreen() {
             // Update Firebase (this will trigger the onValue listener)
             await set(waterRef, newWater);
 
-            console.log(`💧 Added ${DRINK_AMOUNT}ml. Total: ${newWater}ml`);
+            console.log(`${DRINK_AMOUNT}ml. Total: ${newWater}ml`);
         } catch (error) {
             console.error('Error adding water:', error);
             Alert.alert('Error', 'Failed to add water. Please try again.');
@@ -156,9 +213,9 @@ export default function HomeScreen() {
     };
 
     const getPlantImage = () => {
-        if (waterIntake >= DAILY_GOAL) {
+        if (displayWaterIntake >= DAILY_GOAL) {
             return require('../../assets/characters/tree/castus-happy.png');
-        } else if (waterIntake >= DAILY_GOAL / 2) {
+        } else if (displayWaterIntake >= DAILY_GOAL / 2) {
             return require('../../assets/characters/tree/castus-growth.png');
         } else {
             return require('../../assets/characters/tree/castus-sad.png');
@@ -264,6 +321,20 @@ export default function HomeScreen() {
                         <Rain />
                     </View>
                 </>
+            )}
+
+            {/* Happy Video Overlay - Above all layers */}
+            {showHappyVideo && (
+                <View style={styles.videoOverlay} pointerEvents="none">
+                    <VideoView
+                        style={styles.video}
+                        player={player}
+                        allowsFullscreen={false}
+                        allowsPictureInPicture={false}
+                        nativeControls={false}
+                        contentFit="contain"
+                    />
+                </View>
             )}
         </ImageBackground>
     );
@@ -545,5 +616,19 @@ const styles = StyleSheet.create({
         bottom: 0,
         zIndex: 101,
         pointerEvents: 'none',
+    },
+    videoOverlay: {
+        position: 'absolute',
+        top: 380,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 200,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    video: {
+        width: width,
+        height: height,
     },
 });
