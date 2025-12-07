@@ -1,35 +1,54 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ImageBackground, Dimensions, DeviceEventEmitter, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Award } from 'lucide-react-native';
+import { Award, Volume2, VolumeX } from 'lucide-react-native';
 import { ref, onValue, off, set, get } from 'firebase/database';
 import { db } from '../../firebaseConfig';
 import { useAppSelector } from '../store/hooks';
+import { CircleX } from 'lucide-react-native';
+import Rain from '../components/Rain';
+import { Audio } from 'expo-av';
 
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen() {
     const { user } = useAppSelector((state) => state.user);
     const [waterIntake, setWaterIntake] = React.useState(0);
+    const [showRain, setShowRain] = React.useState(false);
+    const [sound, setSound] = React.useState<Audio.Sound | null>(null);
+    const [isPlaying, setIsPlaying] = React.useState(false);
     const DAILY_GOAL = 2500;
     const DRINK_AMOUNT = 250;
 
-    // Fetch water intake from Firebase
+    // Fetch water intake from Firebase and detect changes
     useEffect(() => {
         if (!user) return;
 
         const waterRef = ref(db, `users/${user.uid}/total_water`);
         const unsubscribe = onValue(waterRef, (snapshot) => {
             const data = snapshot.val();
-            if (data !== null) {
-                setWaterIntake(data);
-            } else {
-                setWaterIntake(0);
+            const newWaterIntake = data !== null ? data : 0;
+
+            // Check if water increased (realtime update detected)
+            if (newWaterIntake > waterIntake && waterIntake > 0) {
+                console.log(`✅ Real-time update detected: ${waterIntake}ml → ${newWaterIntake}ml`);
+                triggerRainAnimation();
             }
+
+            setWaterIntake(newWaterIntake);
         });
 
         return () => off(waterRef);
-    }, [user]);
+    }, [user, waterIntake]);
+
+    // Function to trigger rain animation
+    const triggerRainAnimation = () => {
+        setShowRain(true);
+        // Hide rain after 2 seconds
+        setTimeout(() => {
+            setShowRain(false);
+        }, 2000);
+    };
 
     // Function to add water and update Firebase
     const addWater = async () => {
@@ -44,13 +63,29 @@ export default function HomeScreen() {
             const currentWater = snapshot.val() || 0;
             const newWater = Math.min(currentWater + DRINK_AMOUNT, DAILY_GOAL + 1000);
 
-            // Update Firebase
+            // Update Firebase (this will trigger the onValue listener)
             await set(waterRef, newWater);
 
-            console.log(`Added ${DRINK_AMOUNT}ml. Total: ${newWater}ml`);
+            console.log(`💧 Added ${DRINK_AMOUNT}ml. Total: ${newWater}ml`);
         } catch (error) {
             console.error('Error adding water:', error);
             Alert.alert('Error', 'Failed to add water. Please try again.');
+        }
+    };
+
+    // Function to reset water intake to 0
+    const resetWater = async () => {
+        if (!user) {
+            Alert.alert('Error', 'User not logged in');
+            return;
+        }
+        try {
+            const waterRef = ref(db, `users/${user.uid}/total_water`);
+            await set(waterRef, 0);
+            console.log('Water intake reset to 0ml');
+        } catch (error) {
+            console.error('Error resetting water:', error);
+            Alert.alert('Error', 'Failed to reset water. Please try again.');
         }
     };
 
@@ -64,6 +99,61 @@ export default function HomeScreen() {
             subscription.remove();
         };
     }, [user]);
+
+    // Load and setup background music
+    useEffect(() => {
+        let isMounted = true;
+
+        async function loadSound() {
+            try {
+                await Audio.setAudioModeAsync({
+                    playsInSilentModeIOS: true,
+                    staysActiveInBackground: false,
+                });
+
+                const { sound: newSound } = await Audio.Sound.createAsync(
+                    require('../../assets/audio/background-sound.mp3'),
+                    { shouldPlay: false, isLooping: true, volume: 0.3 }
+                );
+
+                if (isMounted) {
+                    setSound(newSound);
+                }
+            } catch (error) {
+                console.error('Error loading sound:', error);
+            }
+        }
+
+        loadSound();
+
+        // Cleanup function
+        return () => {
+            isMounted = false;
+            if (sound) {
+                sound.unloadAsync();
+            }
+        };
+    }, []);
+
+    // Toggle sound play/pause
+    const toggleSound = async () => {
+        if (!sound) return;
+
+        try {
+            const status = await sound.getStatusAsync();
+            if (status.isLoaded) {
+                if (isPlaying) {
+                    await sound.pauseAsync();
+                    setIsPlaying(false);
+                } else {
+                    await sound.playAsync();
+                    setIsPlaying(true);
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling sound:', error);
+        }
+    };
 
     const getPlantImage = () => {
         if (waterIntake >= DAILY_GOAL) {
@@ -112,22 +202,44 @@ export default function HomeScreen() {
                         </View>
                     </View>
                 </View>
+
+                {/* Reset Button */}
+                <TouchableOpacity
+                    style={styles.resetButton}
+                    onPress={resetWater}
+                    activeOpacity={0.7}
+                >
+                    <CircleX color="#ff4444" size={20} />
+                </TouchableOpacity>
+
+                {/* Sound Toggle Button */}
+                <TouchableOpacity
+                    style={styles.soundButton}
+                    onPress={toggleSound}
+                    activeOpacity={0.7}
+                >
+                    {isPlaying ? (
+                        <Volume2 color="#1ecbe1" size={20} />
+                    ) : (
+                        <VolumeX color="#999" size={20} />
+                    )}
+                </TouchableOpacity>
             </View>
 
             {/* Main Game Area */}
             <View style={styles.gameArea}>
                 {/* Plant Container */}
                 <View style={styles.plantContainer}>
-                    {/* Plant Image - Changes based on status */}
-                    <Image
-                        source={getPlantImage()}
-                        style={styles.plantImage}
-                        resizeMode="contain"
-                    />
-                    {/* Pot Image */}
+                    {/* Pot Image - Base layer */}
                     <Image
                         source={require('../../assets/characters/plot/pot-default.png')}
                         style={styles.potImage}
+                        resizeMode="contain"
+                    />
+                    {/* Plant Image - Positioned above pot */}
+                    <Image
+                        source={getPlantImage()}
+                        style={styles.plantImage}
                         resizeMode="contain"
                     />
                 </View>
@@ -139,6 +251,19 @@ export default function HomeScreen() {
                     <Award color="#FFD700" size={24} fill="#FFD700" />
                     <Text style={styles.achievementText}>Goal Met!</Text>
                 </View>
+            )}
+
+            {/* Rain Animation Overlay */}
+            {showRain && (
+                <>
+                    {/* Dark Overlay */}
+                    <View style={styles.darkOverlay} />
+
+                    {/* Rain Animation */}
+                    <View style={styles.rainOverlay}>
+                        <Rain />
+                    </View>
+                </>
             )}
         </ImageBackground>
     );
@@ -170,6 +295,34 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+    },
+    resetButton: {
+        width: 40,
+        height: 40,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        marginLeft: 8,
+    },
+    soundButton: {
+        width: 40,
+        height: 40,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        marginLeft: 8,
     },
     plantIconContainer: {
         width: 40,
@@ -255,21 +408,27 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 280, // Push plant down a bit
+        zIndex: 102,
     },
     plantContainer: {
         alignItems: 'center',
-        justifyContent: 'flex-end',
+        justifyContent: 'center',
         height: 300,
-    },
-    plantImage: {
-        width: 250,
-        height: 250,
-        marginBottom: -85, // Overlap with pot
-        zIndex: 1,
+        position: 'relative',
     },
     potImage: {
         width: 180,
         height: 140,
+        position: 'absolute',
+        bottom: 0,
+        zIndex: 1,
+    },
+    plantImage: {
+        width: 250,
+        height: 250,
+        position: 'absolute',
+        bottom: '20%', // Plant starts at 25% from bottom, auto-adjusts based on pot
+        zIndex: 2,
     },
     bottomControls: {
         flexDirection: 'row',
@@ -368,5 +527,23 @@ const styles = StyleSheet.create({
         color: '#FFD700',
         fontWeight: 'bold',
         fontSize: 16,
+    },
+    darkOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        zIndex: 100,
+    },
+    rainOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 101,
+        pointerEvents: 'none',
     },
 });

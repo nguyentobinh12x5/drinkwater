@@ -19,6 +19,7 @@ export default function BottomTabNavigator() {
 
     return (
         <Tab.Navigator
+            initialRouteName="Home"
             screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarActiveTintColor: '#000000',
@@ -26,7 +27,7 @@ export default function BottomTabNavigator() {
                 tabBarShowLabel: false,
                 tabBarStyle: {
                     backgroundColor: '#FFFFFF',
-                    height: 60 + insets.bottom + 20,
+                    height: 50 + insets.bottom + 20,
                     paddingBottom: insets.bottom + 20,
                     paddingTop: 8,
                 },

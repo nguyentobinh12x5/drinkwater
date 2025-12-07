@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     },
     chart: {
         borderRadius: 16,
-        marginLeft: -20,
+        marginLeft: -15,
     },
     emptyState: {
         height: 240,
