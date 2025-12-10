@@ -20,8 +20,9 @@ export default function HomeScreen() {
     const [sound, setSound] = React.useState<Audio.Sound | null>(null);
     const [isPlaying, setIsPlaying] = React.useState(false);
     const [showHappyVideo, setShowHappyVideo] = React.useState(false);
-    const DAILY_GOAL = 2500;
-    const DRINK_AMOUNT = 1000;
+    const [hasInitialized, setHasInitialized] = React.useState(false);
+    const DAILY_GOAL = 1250;
+    const DRINK_AMOUNT = 250;
 
     // Video player for happy animation
     const videoSource = require('../../assets/video/video-catus-happy.mp4');
@@ -40,7 +41,8 @@ export default function HomeScreen() {
             const newWaterIntake = data !== null ? data : 0;
 
             // Check if water increased (realtime update detected)
-            if (newWaterIntake > waterIntake && waterIntake > 0) {
+            // Use hasInitialized instead of waterIntake > 0
+            if (newWaterIntake > waterIntake && hasInitialized) {
                 console.log(`${waterIntake}ml → ${newWaterIntake}ml`);
                 triggerRainAnimation();
             }
@@ -49,14 +51,15 @@ export default function HomeScreen() {
             const isNowHappy = newWaterIntake >= DAILY_GOAL;
             const wasNotHappy = displayWaterIntake < DAILY_GOAL; // Use displayWaterIntake for visual state check
 
-            if (isNowHappy && wasNotHappy && waterIntake > 0) {
+            if (isNowHappy && wasNotHappy && hasInitialized) {
                 console.log('🎉 Goal reached! Starting animation sequence');
                 triggerHappyVideo();
                 // DON'T update displayWaterIntake - keep showing old plant state
                 // Will update after video finishes
-            } else if (waterIntake === 0) {
+            } else if (!hasInitialized) {
                 // First load - initialize both states
                 setDisplayWaterIntake(newWaterIntake);
+                setHasInitialized(true);
             } else if (!isNowHappy || !wasNotHappy) {
                 // Normal update - not transitioning to happy, update display immediately
                 setDisplayWaterIntake(newWaterIntake);
@@ -66,7 +69,7 @@ export default function HomeScreen() {
         });
 
         return () => off(waterRef);
-    }, [user, waterIntake, displayWaterIntake]);
+    }, [user, waterIntake, displayWaterIntake, hasInitialized]);
 
     // Function to trigger rain animation
     const triggerRainAnimation = () => {
