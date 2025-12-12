@@ -10,6 +10,13 @@ import Rain from '../components/Rain';
 import ChildRewardsModal from '../components/ChildRewardsModal';
 import { updateTodayWaterIntake } from '../utils/HydrationHistory';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
+import {
+    registerForPushNotificationsAsync,
+    scheduleThirstyNotification,
+    scheduleDailyReminder,
+    cancelThirstyNotification
+} from '../utils/NotificationService';
 import { Audio } from 'expo-av';
 import { VideoView, useVideoPlayer } from 'expo-video';
 
@@ -58,6 +65,22 @@ export default function HomeScreen() {
         };
     }, []);
 
+    // Setup notifications on mount
+    useEffect(() => {
+        registerForPushNotificationsAsync();
+
+        // Schedule a daily reminder at 9 AM
+        scheduleDailyReminder(9, 0);
+
+        // Set up notification response listener (when user taps notification)
+        const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+            console.log('Notification tapped:', response);
+            // You can navigate to specific screen here if needed
+        });
+
+        return () => subscription.remove();
+    }, []);
+
     // Video player for happy animation
     const videoSource = require('../../assets/video/video-catus-happy.mp4');
     const player = useVideoPlayer(videoSource, player => {
@@ -73,6 +96,15 @@ export default function HomeScreen() {
         const unsubscribe = onValue(waterRef, (snapshot) => {
             const data = snapshot.val();
             const newWaterIntake = data !== null ? data : 0;
+
+            // Check if water is 0 and send notification
+            if (newWaterIntake === 0 && hasInitialized) {
+                console.log('💧 Water intake is 0 - Sending thirsty notification');
+                scheduleThirstyNotification();
+            } else if (newWaterIntake > 0) {
+                // Cancel thirsty notification when user drinks water
+                cancelThirstyNotification();
+            }
 
             // Check if water increased (realtime update detected)
             // Use hasInitialized instead of waterIntake > 0
