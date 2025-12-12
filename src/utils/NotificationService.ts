@@ -59,11 +59,18 @@ export async function scheduleThirstyNotification() {
         // Schedule new notification
         const notificationId = await Notifications.scheduleNotificationAsync({
             content: {
-                title: "🌵 Cactus is Thirsty",
-                body: "Cactus is thirsty. Please drink water. I miss you 💧",
+                title: "🌵 Your Cactus Craves a Sip!",
+                body: "Your cactus is getting thirsty! Give it some water and show it a little love 💧💚",
                 sound: true,
-                priority: Notifications.AndroidNotificationPriority.HIGH,
-                vibrate: [0, 250, 250, 250],
+                // Android-specific properties (iOS ignores these gracefully)
+                ...(Platform.OS === 'android' && {
+                    priority: Notifications.AndroidNotificationPriority.HIGH,
+                    vibrate: [0, 250, 250, 250],
+                }),
+                // iOS-specific properties
+                ...(Platform.OS === 'ios' && {
+                    badge: 1,
+                }),
             },
             trigger: null, // null means show immediately
         });

@@ -34,6 +34,7 @@ export default function HomeScreen() {
     const [hasInitialized, setHasInitialized] = React.useState(false);
     const [showRewardsModal, setShowRewardsModal] = React.useState(false);
     const [equippedPotId, setEquippedPotId] = React.useState('default');
+    const [hasNotifiedThirsty, setHasNotifiedThirsty] = React.useState(false); // Track if already notified
     const DAILY_GOAL = 1250;
     const DRINK_AMOUNT = 250;
 
@@ -97,13 +98,16 @@ export default function HomeScreen() {
             const data = snapshot.val();
             const newWaterIntake = data !== null ? data : 0;
 
-            // Check if water is 0 and send notification
-            if (newWaterIntake === 0 && hasInitialized) {
-                console.log('💧 Water intake is 0 - Sending thirsty notification');
+            // Check if water is 0 and send notification ONLY ONCE
+            if (newWaterIntake === 0 && hasInitialized && !hasNotifiedThirsty) {
+                console.log('💧 Water intake is 0 - Sending thirsty notification (ONE TIME)');
                 scheduleThirstyNotification();
-            } else if (newWaterIntake > 0) {
-                // Cancel thirsty notification when user drinks water
+                setHasNotifiedThirsty(true); // Mark as notified
+            } else if (newWaterIntake > 0 && hasNotifiedThirsty) {
+                // Reset flag when user drinks water
+                console.log('✅ Water increased - Resetting notification flag');
                 cancelThirstyNotification();
+                setHasNotifiedThirsty(false);
             }
 
             // Check if water increased (realtime update detected)
