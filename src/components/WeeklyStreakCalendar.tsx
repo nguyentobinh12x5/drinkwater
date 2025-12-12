@@ -111,8 +111,8 @@ const styles = StyleSheet.create({
         borderColor: '#E0E0E0',
     },
     dayCircleActive: {
-        backgroundColor: '#333',
-        borderColor: '#333',
+        backgroundColor: '#FF6B35', // Orange color for streak days
+        borderColor: '#FF6B35',
     },
     dayNumber: {
         fontSize: 14,

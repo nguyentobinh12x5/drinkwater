@@ -31,7 +31,7 @@ export default function RewardsScreen() {
     const [customTitle, setCustomTitle] = useState('');
     const [customIcon, setCustomIcon] = useState('🎁');
     const [customDescription, setCustomDescription] = useState('');
-    const [requiredDays, setRequiredDays] = useState('3');
+    const [requiredDays, setRequiredDays] = useState('4');
 
     // Load rewards and streak data
     useEffect(() => {
@@ -61,7 +61,7 @@ export default function RewardsScreen() {
     const handleAddPreset = async (preset: RewardPreset) => {
         if (!user) return;
 
-        const days = parseInt(requiredDays) || 3;
+        const days = parseInt(requiredDays) || 4;
         const rewardData = {
             title: preset.title,
             description: preset.description,
@@ -87,7 +87,7 @@ export default function RewardsScreen() {
             return;
         }
 
-        const days = parseInt(requiredDays) || 3;
+        const days = parseInt(requiredDays) || 4;
         const rewardData = {
             title: customTitle.trim(),
             description: customDescription.trim() || undefined,
