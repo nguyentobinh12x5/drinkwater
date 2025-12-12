@@ -1,56 +1,86 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Dimensions } from 'react-native';
-import { Store, Coins } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Dimensions, Alert, DeviceEventEmitter } from 'react-native';
+import { Store, Coins, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Mock data for pots
-const POTS = [
+// All pots with default pot included
+export const POTS = [
+    {
+        id: 'default',
+        name: 'Default Pot',
+        price: 0,
+        image: require('../../assets/characters/plot/pot-default.png'),
+        unlocked: true
+    },
     {
         id: '1',
         name: 'Jar of Crunch',
-        price: 300,
+        price: 0,
         image: require('../../assets/characters/plot/pot1.png'),
-        type: 'buy'
+        unlocked: true
     },
     {
         id: '2',
         name: 'Electric Star',
         price: 0,
         image: require('../../assets/characters/plot/pot3.png'),
-        type: 'rate'
+        unlocked: true
     },
     {
         id: '3',
         name: 'Resting Fox',
-        price: 300,
+        price: 0,
         image: require('../../assets/characters/plot/pot4.png'),
-        type: 'buy'
+        unlocked: true
     },
     {
         id: '4',
         name: 'Classic Clay',
-        price: 100,
+        price: 0,
         image: require('../../assets/characters/plot/pot5.png'),
-        type: 'buy'
+        unlocked: true
     }
 ];
 
+
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - 60) / 3; // 3 columns with padding
+const EQUIPPED_POT_KEY = '@equipped_pot';
 
 export default function StoreScreen() {
     const [coins, setCoins] = useState(31);
+    const [equippedPotId, setEquippedPotId] = useState('default');
 
-    const handleBuy = (item: typeof POTS[0]) => {
-        if (item.type === 'rate') {
-            alert('Rate us to unlock this pot!');
-            return;
+    // Load equipped pot from AsyncStorage (local)
+    useEffect(() => {
+        loadEquippedPot();
+    }, []);
+
+    const loadEquippedPot = async () => {
+        try {
+            const savedPot = await AsyncStorage.getItem(EQUIPPED_POT_KEY);
+            if (savedPot) {
+                setEquippedPotId(savedPot);
+            }
+        } catch (error) {
+            console.error('Error loading equipped pot:', error);
         }
-        if (coins >= item.price) {
-            setCoins(prev => prev - item.price);
-            alert(`You bought ${item.name}!`);
-        } else {
-            alert('Not enough coins!');
+    };
+
+    const handleEquip = async (item: typeof POTS[0]) => {
+        try {
+            // Save to AsyncStorage (local storage)
+            await AsyncStorage.setItem(EQUIPPED_POT_KEY, item.id);
+            setEquippedPotId(item.id);
+
+            // Notify HomeScreen about the change
+            DeviceEventEmitter.emit('potChanged', item.id);
+
+            Alert.alert('Success', `${item.name} equipped!`);
+        } catch (error) {
+            console.error('Error equipping pot:', error);
+            Alert.alert('Error', 'Failed to equip pot');
         }
     };
 
@@ -100,32 +130,47 @@ export default function StoreScreen() {
                     </View>
                 </LinearGradient>
 
-                {/* Featured Pots */}
-                <Text style={styles.sectionTitle}>Featured Pots</Text>
+                {/* Plant Pots */}
+                <Text style={styles.sectionTitle}>Plant Pots</Text>
                 <View style={styles.grid}>
-                    {POTS.map((item) => (
-                        <TouchableOpacity
-                            key={item.id}
-                            style={styles.itemCard}
-                            onPress={() => handleBuy(item)}
-                            activeOpacity={0.8}
-                        >
-                            <View style={styles.imageContainer}>
-                                <Image source={item.image} style={styles.itemImage} resizeMode="contain" />
-                            </View>
+                    {POTS.map((item) => {
+                        const isEquipped = equippedPotId === item.id;
 
-                            {item.type === 'rate' ? (
-                                <Text style={styles.rateText}>Rate Us</Text>
-                            ) : (
-                                <View style={styles.priceRow}>
-                                    <Coins size={14} color="#FFD700" fill="#FFD700" />
-                                    <Text style={styles.priceText}>{item.price}</Text>
+                        return (
+                            <TouchableOpacity
+                                key={item.id}
+                                style={[
+                                    styles.itemCard,
+                                    isEquipped && styles.equippedCard
+                                ]}
+                                onPress={() => handleEquip(item)}
+                                activeOpacity={0.8}
+                            >
+                                <View style={styles.imageContainer}>
+                                    <Image source={item.image} style={styles.itemImage} resizeMode="contain" />
+                                    {isEquipped && (
+                                        <View style={styles.equippedBadge}>
+                                            <Check size={16} color="#FFFFFF" />
+                                        </View>
+                                    )}
                                 </View>
-                            )}
 
-                            <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
-                        </TouchableOpacity>
-                    ))}
+                                <View style={[
+                                    styles.equipButton,
+                                    isEquipped && styles.equippedButton
+                                ]}>
+                                    <Text style={[
+                                        styles.equipText,
+                                        isEquipped && styles.equippedText
+                                    ]}>
+                                        {isEquipped ? 'Equipped' : 'Equip'}
+                                    </Text>
+                                </View>
+
+                                <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
 
                 <View style={{ height: 100 }} />
@@ -250,16 +295,53 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 2,
     },
+    equippedCard: {
+        borderWidth: 2,
+        borderColor: '#8BC34A',
+        backgroundColor: '#F1F8E9',
+    },
     imageContainer: {
         width: '100%',
         aspectRatio: 1,
         marginBottom: 8,
         justifyContent: 'center',
         alignItems: 'center',
+        position: 'relative',
     },
     itemImage: {
         width: '100%',
         height: '100%',
+    },
+    equippedBadge: {
+        position: 'absolute',
+        top: 4,
+        right: 4,
+        backgroundColor: '#8BC34A',
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    equipButton: {
+        backgroundColor: '#1ecbe1',
+        paddingVertical: 6,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        marginBottom: 6,
+        minWidth: 80,
+        alignItems: 'center',
+    },
+    equippedButton: {
+        backgroundColor: '#8BC34A',
+    },
+    equipText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+    equippedText: {
+        color: '#FFFFFF',
     },
     priceRow: {
         flexDirection: 'row',
@@ -284,3 +366,4 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
 });
+

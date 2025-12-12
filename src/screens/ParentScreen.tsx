@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { Users, TrendingUp, Award, Flame } from 'lucide-react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { Users, TrendingUp, Award, Flame, Gift } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
 import { TimeFilter } from '../types';
 import { mockChildren, getChartData, getTodaySummary } from '../utils/HydrationData';
 import TimeFilterTabs from '../components/TimeFilterTabs';
@@ -9,6 +10,7 @@ import TodayProgress from '../components/TodayProgress';
 import ChildSelector from '../components/ChildSelector';
 
 export default function ParentScreen() {
+    const navigation = useNavigation();
     const [activeChildId, setActiveChildId] = useState(mockChildren[0]?.id || '');
     const [timeFilter, setTimeFilter] = useState<TimeFilter>('day');
 
@@ -26,6 +28,13 @@ export default function ParentScreen() {
             <View style={styles.header}>
                 <Users size={32} />
                 <Text style={styles.title}>Parent Dashboard</Text>
+                <TouchableOpacity
+                    style={styles.rewardsButton}
+                    onPress={() => navigation.navigate('Rewards' as never)}
+                    activeOpacity={0.7}
+                >
+                    <Gift size={24} color="#FFD700" />
+                </TouchableOpacity>
             </View>
 
             <ScrollView
@@ -104,6 +113,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingTop: 60,
         paddingBottom: 20,
+        paddingHorizontal: 20,
         backgroundColor: '#FFFFFF',
         borderBottomLeftRadius: 24,
         borderBottomRightRadius: 24,
@@ -113,6 +123,22 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 3,
         gap: 12,
+    },
+    rewardsButton: {
+        position: 'absolute',
+        right: 20,
+        top: 60,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#FFF9E6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     title: {
         fontSize: 24,

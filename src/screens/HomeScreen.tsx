@@ -1,16 +1,20 @@
 import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ImageBackground, Dimensions, DeviceEventEmitter, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Award, Volume2, VolumeX } from 'lucide-react-native';
+import { Award, Volume2, VolumeX, Gift } from 'lucide-react-native';
 import { ref, onValue, off, set, get } from 'firebase/database';
 import { db } from '../../firebaseConfig';
 import { useAppSelector } from '../store/hooks';
 import { CircleX } from 'lucide-react-native';
 import Rain from '../components/Rain';
+import ChildRewardsModal from '../components/ChildRewardsModal';
+import { updateTodayWaterIntake } from '../utils/HydrationHistory';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
 import { VideoView, useVideoPlayer } from 'expo-video';
 
 const { width, height } = Dimensions.get('window');
+const EQUIPPED_POT_KEY = '@equipped_pot';
 
 export default function HomeScreen() {
     const { user } = useAppSelector((state) => state.user);
@@ -21,8 +25,38 @@ export default function HomeScreen() {
     const [isPlaying, setIsPlaying] = React.useState(false);
     const [showHappyVideo, setShowHappyVideo] = React.useState(false);
     const [hasInitialized, setHasInitialized] = React.useState(false);
+    const [showRewardsModal, setShowRewardsModal] = React.useState(false);
+    const [equippedPotId, setEquippedPotId] = React.useState('default');
     const DAILY_GOAL = 1250;
     const DRINK_AMOUNT = 250;
+
+    // Load equipped pot from AsyncStorage (local)
+    useEffect(() => {
+        loadEquippedPot();
+    }, []);
+
+    const loadEquippedPot = async () => {
+        try {
+            const savedPot = await AsyncStorage.getItem(EQUIPPED_POT_KEY);
+            if (savedPot) {
+                setEquippedPotId(savedPot);
+            }
+        } catch (error) {
+            console.error('Error loading equipped pot:', error);
+        }
+    };
+
+    // Listen for pot change events from StoreScreen
+    useEffect(() => {
+        const subscription = DeviceEventEmitter.addListener('potChanged', (newPotId: string) => {
+            console.log('Pot changed to:', newPotId);
+            setEquippedPotId(newPotId);
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, []);
 
     // Video player for happy animation
     const videoSource = require('../../assets/video/video-catus-happy.mp4');
@@ -66,6 +100,11 @@ export default function HomeScreen() {
             }
 
             setWaterIntake(newWaterIntake);
+
+            // Update history for streak tracking
+            if (user) {
+                updateTodayWaterIntake(user.uid, newWaterIntake, DAILY_GOAL);
+            }
         });
 
         return () => off(waterRef);
@@ -225,6 +264,21 @@ export default function HomeScreen() {
         }
     };
 
+    const getPotImage = () => {
+        switch (equippedPotId) {
+            case '1':
+                return require('../../assets/characters/plot/pot1.png');
+            case '2':
+                return require('../../assets/characters/plot/pot3.png');
+            case '3':
+                return require('../../assets/characters/plot/pot4.png');
+            case '4':
+                return require('../../assets/characters/plot/pot5.png');
+            default:
+                return require('../../assets/characters/plot/pot-default.png');
+        }
+    };
+
     const progressPercentage = Math.min((waterIntake / DAILY_GOAL) * 100, 100);
 
     return (
@@ -284,6 +338,15 @@ export default function HomeScreen() {
                         <VolumeX color="#999" size={20} />
                     )}
                 </TouchableOpacity>
+
+                {/* Rewards Button */}
+                <TouchableOpacity
+                    style={styles.rewardsButton}
+                    onPress={() => setShowRewardsModal(true)}
+                    activeOpacity={0.7}
+                >
+                    <Gift color="#FFD700" size={20} />
+                </TouchableOpacity>
             </View>
 
             {/* Main Game Area */}
@@ -292,7 +355,7 @@ export default function HomeScreen() {
                 <View style={styles.plantContainer}>
                     {/* Pot Image - Base layer */}
                     <Image
-                        source={require('../../assets/characters/plot/pot-default.png')}
+                        source={getPotImage()}
                         style={styles.potImage}
                         resizeMode="contain"
                     />
@@ -339,6 +402,12 @@ export default function HomeScreen() {
                     />
                 </View>
             )}
+
+            {/* Rewards Modal */}
+            <ChildRewardsModal
+                visible={showRewardsModal}
+                onClose={() => setShowRewardsModal(false)}
+            />
         </ImageBackground>
     );
 }
@@ -388,6 +457,20 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        marginLeft: 8,
+    },
+    rewardsButton: {
+        width: 40,
+        height: 40,
+        backgroundColor: '#FFF9E6',
         borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',

@@ -7,7 +7,7 @@ import { ShoppingBag, Users, Home, GraduationCap, User, Droplet } from 'lucide-r
 
 // Import screens
 import StoreScreen from '../screens/StoreScreen';
-import ParentScreen from '../screens/ParentScreen';
+import ParentStackNavigator from './ParentStackNavigator';
 import HomeScreen from '../screens/HomeScreen';
 import SchoolScreen from '../screens/SchoolScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -74,7 +74,7 @@ export default function BottomTabNavigator() {
             />
             <Tab.Screen
                 name="Parent"
-                component={ParentScreen}
+                component={ParentStackNavigator}
             />
             <Tab.Screen
                 name="Home"
